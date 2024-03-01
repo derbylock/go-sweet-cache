@@ -41,10 +41,10 @@ type cacheItem[K comparable, V any] struct {
 type Cache[K comparable, V any] struct {
 	back SimpleCache
 	sfg  *singleflight.Group[K, V]
-	now  func() *time.Time
+	now  func() time.Time
 }
 
-func NewCache[K comparable, V any](back SimpleCache, now func() *time.Time) *Cache[K, V] {
+func NewCache[K comparable, V any](back SimpleCache, now func() time.Time) *Cache[K, V] {
 	return &Cache[K, V]{
 		back: back,
 		sfg:  &singleflight.Group[K, V]{},
