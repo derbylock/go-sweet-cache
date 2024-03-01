@@ -2,6 +2,7 @@ package simple
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/derbylock/go-sweet-cache/pkg/sweet"
@@ -32,10 +33,18 @@ type SimpleCache interface {
 }
 
 type cacheItem[K comparable, V any] struct {
-	value  V
-	err    error
-	actual time.Time
-	usable time.Time
+	value  V         `json:"v"`
+	err    error     `json:"e"`
+	actual time.Time `json:"a"`
+	usable time.Time `json:"u"`
+}
+
+func (u *cacheItem[K, V]) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(u)
+}
+
+func (u *cacheItem[K, V]) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, u)
 }
 
 type Cache[K comparable, V any] struct {
