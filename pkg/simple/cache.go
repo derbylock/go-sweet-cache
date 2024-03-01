@@ -39,11 +39,11 @@ type cacheItem[K comparable, V any] struct {
 	usable time.Time `json:"u"`
 }
 
-func (u *cacheItem[K, V]) MarshalBinary() (data []byte, err error) {
+func (u cacheItem[K, V]) MarshalBinary() (data []byte, err error) {
 	return json.Marshal(u)
 }
 
-func (u *cacheItem[K, V]) UnmarshalBinary(data []byte) error {
+func (u cacheItem[K, V]) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, u)
 }
 
