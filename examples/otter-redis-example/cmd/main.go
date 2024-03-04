@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	sweetRedis "github.com/derbylock/go-sweet-cache/adapters/go_redis/v2/go_redis"
+	sweetOtter "github.com/derbylock/go-sweet-cache/adapters/otter/v2"
 	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
 	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"github.com/maypok86/otter"
@@ -43,7 +45,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	redisCache := adapters.NewRedis[string, *User](rdb, func(key any) context.Context {
+	redisCache := sweetRedis.NewRedis[string, *User](rdb, func(key any) context.Context {
 		return context.Background()
 	})
 
@@ -132,7 +134,7 @@ func remoteCacheProvider[K comparable, V any](remoteCache sweet.Cacher[K, V], us
 	}
 }
 
-func createLocalCache() *adapters.Otter {
+func createLocalCache() *sweetOtter.Otter {
 	// create a cache with capacity equal to 10000 elements
 	otterCache, err := otter.MustBuilder[any, any](10_000).
 		CollectStats().
@@ -144,7 +146,7 @@ func createLocalCache() *adapters.Otter {
 	if err != nil {
 		panic(err)
 	}
-	localCache := adapters.NewOtter(otterCache, time.Hour)
+	localCache := sweetOtter.NewOtter(otterCache, time.Hour)
 	return localCache
 }
 

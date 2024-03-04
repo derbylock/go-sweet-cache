@@ -1,4 +1,4 @@
-module github.com/derbylock/go-sweet-cache/adapters/go_redis/v2
+module github.com/derbylock/go-sweet-cache/adapters/goredis/v2
 
 go 1.21.7
 
