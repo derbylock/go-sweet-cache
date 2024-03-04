@@ -72,7 +72,7 @@ func main() {
 	) {
 		i := cntExec.Add(1)
 		if i == 2 {
-			return User{}, errors.New("cached error")
+			return nil, errors.New("cached error")
 		}
 
 		return User{
