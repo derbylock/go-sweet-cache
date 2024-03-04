@@ -10,7 +10,6 @@ import (
 	adaptersRedis "github.com/derbylock/go-sweet-cache/adapters/goredis/v2"
 	adaptersOtter "github.com/derbylock/go-sweet-cache/adapters/otter/v2"
 	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
-	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"github.com/maypok86/otter"
 	"github.com/redis/go-redis/v9"
 )
@@ -18,63 +17,59 @@ import (
 var cntExec = atomic.Int32{}
 
 func main() {
-	ctx, userRepository, cache := initServices()
-
-	getUserByNameCached := sweet.SimpleFixedTTLProvider(
-		time.Second*20,
-		time.Second*5,
-		userRepository.getUserByNameAndSurname,
-	)
+	ctx, userRepository := initServices()
 
 	const key1 = "keyX1"
 	const key2 = "keyX2"
 
-	v1, err := cache.GetOrProvide(ctx, key1, getUserByNameCached)
+	v1, err := userRepository.GetUser(ctx, GetUserParams{Name: key1})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key2, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key2})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key1, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key1})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key2, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key2})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second * 10)
 	fmt.Println("After 10 sec")
-	v1, err = cache.GetOrProvide(ctx, key1, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key1})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key2, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key2})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second)
 	fmt.Println("After 1 sec")
-	v1, err = cache.GetOrProvide(ctx, key1, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key1})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key2, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key2})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second * 30)
 	fmt.Println("After 30 seconds")
-	v1, err = cache.GetOrProvide(ctx, key1, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key1})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, key2, getUserByNameCached)
+	v1, err = userRepository.GetUser(ctx, GetUserParams{Name: key2})
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 }
 
-func initServices() (context.Context, *UserRepository, *simple.TwoLevelCache[string, User]) {
+func initServices() (context.Context, *CachedUserRepository) {
 	ctx := context.Background()
 	rdb := redisClient()
 	userRepository := NewUserRepository()
 
-	localCache := simple.NewCache[string, User](otterSimpleCache(), time.Now)
-	redisCache := adaptersRedis.NewRedis[string, User](rdb, &LogMonitoring{})
-	cache := simple.NewTwoLevelCache[string, User](localCache, redisCache)
-	return ctx, userRepository, cache
+	localCache := simple.NewCache[GetUserParams, User](otterSimpleCache(), time.Now)
+	redisCache := adaptersRedis.NewRedis[GetUserParams, User](rdb, "@getUsers::", &LogMonitoring{})
+	cache := simple.NewTwoLevelCache[GetUserParams, User](localCache, redisCache)
+
+	cachedRepository := NewCachedUserRepository(userRepository, cache)
+	return ctx, cachedRepository
 }
 
 func redisClient() *redis.Client {

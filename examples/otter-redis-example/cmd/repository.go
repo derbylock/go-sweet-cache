@@ -2,11 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding"
 	"encoding/json"
-	"time"
-
-	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 )
 
 type UserRepository struct {
@@ -22,7 +18,7 @@ type GetUserParams struct {
 }
 
 func (u *GetUserParams) MarshalBinary() (data []byte, err error) {
-	return "userRepository:" + json.Marshal(u)
+	return json.Marshal(u)
 }
 
 func (r *UserRepository) GetUser(ctx context.Context, params GetUserParams) (
@@ -35,18 +31,4 @@ func (r *UserRepository) GetUser(ctx context.Context, params GetUserParams) (
 		Surname: params.Surname,
 		Age:     len(params.Name)*3 + len(params.Surname)*2,
 	}, nil
-}
-
-func Cached[K encoding.BinaryMarshaler, V any](
-	cacheNamespace string,
-	actualTTL time.Duration,
-	negativeTTL time.Duration,
-	provider func(ctx context.Context, params K) (V, error)) {
-	cacheNamespace
-
-	return sweet.SimpleFixedTTLProvider(
-		time.Second*20,
-		time.Second*5,
-		provider,
-	)
 }
