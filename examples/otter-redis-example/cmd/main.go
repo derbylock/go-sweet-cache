@@ -9,10 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"otter-redis-example/pkg/adapters"
-
-	"github.com/derbylock/go-sweet-cache/pkg/simple"
-	"github.com/derbylock/go-sweet-cache/pkg/sweet"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"github.com/maypok86/otter"
 	"github.com/redis/go-redis/v9"
 )

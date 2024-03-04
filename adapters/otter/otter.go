@@ -3,7 +3,7 @@ package otter
 import (
 	"time"
 
-	"github.com/derbylock/go-sweet-cache/pkg/simple"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
 	"github.com/maypok86/otter"
 )
 
