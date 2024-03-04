@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/derbylock/go-sweet-cache/pkg/sweet"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"resenje.org/singleflight"
 )
 
