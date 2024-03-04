@@ -14,9 +14,8 @@ import (
 var _ sweet.Cacher[string, any] = &Redis[string, any]{}
 
 type Redis[K comparable, V any] struct {
-	cli         *redis.Client
-	ctxProvider func(key any) context.Context
-	monitoring  RedisClientErrorsMonitoring
+	cli        *redis.Client
+	monitoring RedisClientErrorsMonitoring
 }
 
 type RedisClientErrorsMonitoring interface {
@@ -75,14 +74,14 @@ func (r *Redis[K, V]) Get(ctx context.Context, key K) (V, bool) {
 
 func (r *Redis[K, V]) Remove(ctx context.Context, key K) {
 	keyString := r.keyString(key)
-	err := r.cli.Del(context.Background(), keyString).Err()
+	err := r.cli.Del(ctx, keyString).Err()
 	if err != nil {
 		r.monitoring.RemoveFailed(ctx, keyString, err)
 	}
 }
 
-func NewRedis[K comparable, V any](cli *redis.Client, ctxProvider func(key any) context.Context) *Redis[K, V] {
-	return &Redis[K, V]{cli: cli, ctxProvider: ctxProvider}
+func NewRedis[K comparable, V any](cli *redis.Client, monitoring RedisClientErrorsMonitoring) *Redis[K, V] {
+	return &Redis[K, V]{cli: cli, monitoring: monitoring}
 }
 
 func (r *Redis[K, V]) Clear(ctx context.Context) {
