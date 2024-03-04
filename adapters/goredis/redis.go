@@ -27,7 +27,7 @@ type RedisClientErrorsMonitoring interface {
 func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V]) (V, bool) {
 	var v V
 	keyString := r.keyString(key)
-	err := r.cli.Get(ctx, keyString).Scan(&v)
+	err := r.cli.Get(ctx, keyString).Scan(v)
 	if err != nil {
 		if !errors.Is(err, redis.Nil) {
 			r.monitoring.GetFailed(ctx, keyString, err)
@@ -47,7 +47,7 @@ func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider swe
 func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V], defaultValue V) (V, bool) {
 	var v V
 	keyString := r.keyString(key)
-	err := r.cli.Get(ctx, keyString).Scan(&v)
+	err := r.cli.Get(ctx, keyString).Scan(v)
 	if err != nil {
 		if !errors.Is(err, redis.Nil) {
 			r.monitoring.GetFailed(ctx, keyString, err)

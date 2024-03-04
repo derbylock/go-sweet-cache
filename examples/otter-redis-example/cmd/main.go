@@ -37,15 +37,15 @@ type NopMonitoring struct {
 }
 
 func (n NopMonitoring) GetFailed(ctx context.Context, key string, err error) {
-	fmt.Sprintf("GetFailed key:%s err:%w\n", key, err)
+	fmt.Printf("GetFailed key:%s err:%w\n", key, err)
 }
 
 func (n NopMonitoring) SetFailed(ctx context.Context, key string, err error) {
-	fmt.Sprintf("SetFailed key:%s err:%w\n", key, err)
+	fmt.Printf("SetFailed key:%s err:%w\n", key, err)
 }
 
 func (n NopMonitoring) RemoveFailed(ctx context.Context, key string, err error) {
-	fmt.Sprintf("RemoveFailed key:%s err:%w\n", key, err)
+	fmt.Printf("RemoveFailed key:%s err:%w\n", key, err)
 }
 
 func main() {
@@ -61,21 +61,21 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	redisCache := adaptersRedis.NewRedis[string, *User](rdb, &NopMonitoring{})
+	redisCache := adaptersRedis.NewRedis[string, User](rdb, &NopMonitoring{})
 
 	localCache := createLocalCache()
-	cache := simple.NewCache[string, *User](localCache, time.Now)
+	cache := simple.NewCache[string, User](localCache, time.Now)
 
 	userProvider := func(ctx context.Context, key string) (
-		val *User,
+		val User,
 		err error,
 	) {
 		i := cntExec.Add(1)
 		if i == 2 {
-			return nil, errors.New("cached error")
+			return User{}, errors.New("cached error")
 		}
 
-		return &User{
+		return User{
 			Name: key,
 			Age:  len(key) * 3,
 		}, nil
