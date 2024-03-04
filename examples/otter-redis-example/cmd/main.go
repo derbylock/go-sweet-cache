@@ -33,6 +33,21 @@ func (u *User) UnmarshalBinary(data []byte) error {
 
 var cntExec = atomic.Int32{}
 
+type NopMonitoring struct {
+}
+
+func (n NopMonitoring) GetFailed(ctx context.Context, key string, err error) {
+	fmt.Sprintf("GetFailed key:%s err:%w\n", key, err)
+}
+
+func (n NopMonitoring) SetFailed(ctx context.Context, key string, err error) {
+	fmt.Sprintf("SetFailed key:%s err:%w\n", key, err)
+}
+
+func (n NopMonitoring) RemoveFailed(ctx context.Context, key string, err error) {
+	fmt.Sprintf("RemoveFailed key:%s err:%w\n", key, err)
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -46,9 +61,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	redisCache := adaptersRedis.NewRedis[string, *User](rdb, func(key any) context.Context {
-		return context.Background()
-	})
+	redisCache := adaptersRedis.NewRedis[string, *User](rdb, &NopMonitoring{})
 
 	localCache := createLocalCache()
 	cache := simple.NewCache[string, *User](localCache, time.Now)

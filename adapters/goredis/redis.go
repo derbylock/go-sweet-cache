@@ -29,7 +29,7 @@ func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider swe
 	keyString := r.keyString(key)
 	err := r.cli.Get(ctx, keyString).Scan(&v)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		if !errors.Is(err, redis.Nil) {
 			r.monitoring.GetFailed(ctx, keyString, err)
 		}
 		var actualTTL time.Duration
@@ -49,7 +49,7 @@ func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvide
 	keyString := r.keyString(key)
 	err := r.cli.Get(ctx, keyString).Scan(&v)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		if !errors.Is(err, redis.Nil) {
 			r.monitoring.GetFailed(ctx, keyString, err)
 		}
 		go func() {
