@@ -105,10 +105,10 @@ func (r *Redis[K, V]) encode(value any) (string, error) {
 	case encoding.BinaryMarshaler:
 		b, err := s.MarshalBinary()
 		if err != nil {
-			return "", fmt.Errorf("marshal binary: %w")
+			return "", fmt.Errorf("marshal binary: %w", err)
 		}
 		return string(b), nil
 	default:
-		return fmt.Sprint("%v", value), nil
+		return fmt.Sprintf("%v", value), nil
 	}
 }
