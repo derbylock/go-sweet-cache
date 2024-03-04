@@ -1,4 +1,4 @@
-package adapters
+package go_redis
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// var _ sweet.Cacher[string, any] = &Redis[string, any]{}
+var _ sweet.Cacher[string, any] = &Redis[string, any]{}
 
 type Redis[K comparable, V any] struct {
 	cli         *redis.Client
@@ -58,8 +58,9 @@ func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvide
 	return v, true
 }
 
-func (r *Redis[K, V]) Get(ctx context.Context, key K) (V, bool, error) {
-	return *new(V), false, nil
+func (r *Redis[K, V]) Get(ctx context.Context, key K) (V, bool) {
+	// always return cache miss because we can't return value without remote calls
+	return *new(V), false
 }
 
 func (r *Redis[K, V]) Remove(ctx context.Context, key K) {
