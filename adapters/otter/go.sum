@@ -1,9 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/derbylock/go-sweet-cache v1.0.0/go.mod h1:nYWjZoBeqvm7tA4JKdPA4HjR0E+MH7dySInN5GbVYyY=
-github.com/derbylock/go-sweet-cache v1.0.3 h1:aTd+McNmgyZ8TPBdVj5drZSg/opECj2f1SH86Cp2ldY=
-github.com/derbylock/go-sweet-cache v1.0.3/go.mod h1:nYWjZoBeqvm7tA4JKdPA4HjR0E+MH7dySInN5GbVYyY=
-github.com/derbylock/go-sweet-cache v1.0.5/go.mod h1:nYWjZoBeqvm7tA4JKdPA4HjR0E+MH7dySInN5GbVYyY=
+github.com/derbylock/go-sweet-cache/lib/v2 v2.0.1 h1:nofSxf55u1BrUe4heAeBVjmFLtM1kjvWfssOpQyynoc=
+github.com/derbylock/go-sweet-cache/lib/v2 v2.0.1/go.mod h1:34nhia/cS17uS+btRD8L/inqU831I7DMsh8yD4xXG1I=
 github.com/dolthub/maphash v0.1.0 h1:bsQ7JsF4FkkWyrP3oCnFJgrCUAFbFf3kOl4L/QxPDyQ=
 github.com/dolthub/maphash v0.1.0/go.mod h1:gkg4Ch4CdCDu5h6PMriVLawB7koZ+5ijb9puGMV50a4=
 github.com/dolthub/swiss v0.2.1 h1:gs2osYs5SJkAaH5/ggVJqXQxRXtWshF6uE0lgR/Y3Gw=

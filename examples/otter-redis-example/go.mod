@@ -3,6 +3,7 @@ module otter-redis-example
 go 1.21.7
 
 require (
+	github.com/derbylock/go-sweet-cache/lib/v2 v2.0.1
 	github.com/maypok86/otter v1.0.0
 	github.com/redis/go-redis/v9 v9.5.1
 )

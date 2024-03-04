@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/derbylock/go-sweet-cache/pkg/sweet"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"github.com/redis/go-redis/v9"
 )
 
