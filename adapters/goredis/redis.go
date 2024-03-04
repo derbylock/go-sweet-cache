@@ -15,6 +15,7 @@ var _ sweet.Cacher[string, any] = &Redis[string, any]{}
 
 type Redis[K comparable, V any] struct {
 	cli        *redis.Client
+	keyPrefix  string
 	monitoring RedisClientErrorsMonitoring
 }
 
@@ -80,8 +81,8 @@ func (r *Redis[K, V]) Remove(ctx context.Context, key K) {
 	}
 }
 
-func NewRedis[K comparable, V any](cli *redis.Client, monitoring RedisClientErrorsMonitoring) *Redis[K, V] {
-	return &Redis[K, V]{cli: cli, monitoring: monitoring}
+func NewRedis[K comparable, V any](cli *redis.Client, keyPrefix string, monitoring RedisClientErrorsMonitoring) *Redis[K, V] {
+	return &Redis[K, V]{cli: cli, keyPrefix: keyPrefix, monitoring: monitoring}
 }
 
 func (r *Redis[K, V]) Clear(ctx context.Context) {
@@ -91,9 +92,9 @@ func (r *Redis[K, V]) Clear(ctx context.Context) {
 func (r *Redis[K, V]) keyString(key any) string {
 	k, err := r.encode(key)
 	if err != nil {
-		return fmt.Sprintf("%v", k)
+		return fmt.Sprintf("%s%v", r.keyPrefix, k)
 	}
-	return k
+	return r.keyPrefix + k
 }
 
 func (r *Redis[K, V]) encode(value any) (string, error) {

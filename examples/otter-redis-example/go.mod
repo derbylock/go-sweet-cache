@@ -4,8 +4,8 @@ go 1.21.7
 
 require (
 	github.com/derbylock/go-sweet-cache/adapters/goredis/v2 v2.0.11
-	github.com/derbylock/go-sweet-cache/adapters/otter/v2 v2.0.4
-	github.com/derbylock/go-sweet-cache/lib/v2 v2.0.4
+	github.com/derbylock/go-sweet-cache/adapters/otter/v2 v2.0.11
+	github.com/derbylock/go-sweet-cache/lib/v2 v2.0.11
 	github.com/maypok86/otter v1.0.0
 	github.com/redis/go-redis/v9 v9.5.1
 )
