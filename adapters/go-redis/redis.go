@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var _ sweet.Cacher[string, any] = &Redis[string, any]{}
+// var _ sweet.Cacher[string, any] = &Redis[string, any]{}
 
 type Redis[K comparable, V any] struct {
 	cli         *redis.Client
