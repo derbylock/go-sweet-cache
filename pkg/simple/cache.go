@@ -2,7 +2,6 @@ package simple
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/derbylock/go-sweet-cache/pkg/sweet"
@@ -32,19 +31,11 @@ type SimpleCache interface {
 	SetWithTTL(key any, value any, ttl time.Duration) bool
 }
 
-type cacheItem[K comparable, V any] struct {
-	value  V         `json:"v"`
-	err    error     `json:"e"`
-	actual time.Time `json:"a"`
-	usable time.Time `json:"u"`
-}
-
-func (u cacheItem[K, V]) MarshalBinary() (data []byte, err error) {
-	return json.Marshal(u)
-}
-
-func (u cacheItem[K, V]) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, u)
+type CacheItem[K comparable, V any] struct {
+	value  V
+	ok     bool
+	actual time.Time
+	usable time.Time
 }
 
 type Cache[K comparable, V any] struct {
@@ -61,24 +52,24 @@ func NewCache[K comparable, V any](back SimpleCache, now func() time.Time) *Cach
 	}
 }
 
-func (c Cache[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V]) (V, error) {
+func (c Cache[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V]) (V, bool) {
 	now := c.now()
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(cacheItem[K, V]); ok {
+		if item, ok := cachedVal.(CacheItem[K, V]); ok {
 			if now.Before(item.actual) {
-				return item.value, item.err
+				return item.value, item.ok
 			}
 			if now.Before(item.usable) {
 				go func() {
 					c.updateValueFromProvider(ctx, key, valueProvider)
 				}()
-				return item.value, item.err
+				return item.value, item.ok
 			}
 		}
 	}
 
 	v, _, err := c.updateValueFromProvider(ctx, key, valueProvider)
-	return v, err
+	return v, err == nil
 }
 
 func (c Cache[K, V]) updateValueFromProvider(
@@ -90,9 +81,9 @@ func (c Cache[K, V]) updateValueFromProvider(
 		v, actualTll, usableTtl, err := valueProvider(ctx, key)
 		// use new now after the value provided
 		now := c.now()
-		item := cacheItem[K, V]{
+		item := CacheItem[K, V]{
 			value:  v,
-			err:    err,
+			ok:     err == nil,
 			actual: now.Add(actualTll),
 			usable: now.Add(usableTtl),
 		}
@@ -106,18 +97,18 @@ func (c Cache[K, V]) GetOrProvideAsync(
 	key K,
 	valueProvider sweet.ValueProvider[K, V],
 	defaultValue V,
-) (V, error) {
+) (V, bool) {
 	now := c.now()
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(cacheItem[K, V]); ok {
+		if item, ok := cachedVal.(CacheItem[K, V]); ok {
 			if now.Before(item.actual) {
-				return item.value, item.err
+				return item.value, item.ok
 			}
 			if now.Before(item.usable) {
 				go func() {
 					c.updateValueFromProvider(ctx, key, valueProvider)
 				}()
-				return item.value, item.err
+				return item.value, item.ok
 			}
 		}
 	}
@@ -125,25 +116,25 @@ func (c Cache[K, V]) GetOrProvideAsync(
 	go func() {
 		c.updateValueFromProvider(ctx, key, valueProvider)
 	}()
-	return defaultValue, nil
+	return defaultValue, false
 }
 
-func (c Cache[K, V]) Get(key K) (V, bool, error) {
+func (c Cache[K, V]) Get(ctx context.Context, key K) (V, bool) {
 	now := c.now()
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(cacheItem[K, V]); ok {
+		if item, ok := cachedVal.(CacheItem[K, V]); ok {
 			if now.Before(item.usable) {
-				return item.value, true, item.err
+				return item.value, item.ok
 			}
 		}
 	}
-	return *new(V), false, nil
+	return *new(V), false
 }
 
-func (c Cache[K, V]) Remove(key K) {
+func (c Cache[K, V]) Remove(ctx context.Context, key K) {
 	c.back.Remove(key)
 }
 
-func (c Cache[K, V]) Clear() {
+func (c Cache[K, V]) Clear(ctx context.Context) {
 	c.back.Clear()
 }
