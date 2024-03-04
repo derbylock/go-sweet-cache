@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	adaptersOtter "github.com/derbylock/go-sweet-cache/adapters/goredis/v2"
+	adaptersRedis "github.com/derbylock/go-sweet-cache/adapters/goredis/v2"
 	adaptersOtter "github.com/derbylock/go-sweet-cache/adapters/otter/v2"
 	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
 	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
@@ -46,7 +46,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	redisCache := sweetRedis.NewRedis[string, *User](rdb, func(key any) context.Context {
+	redisCache := adaptersRedis.NewRedis[string, *User](rdb, func(key any) context.Context {
 		return context.Background()
 	})
 
@@ -122,7 +122,8 @@ func remoteCacheProvider[K comparable, V any](remoteCache sweet.Cacher[K, V], us
 		var newActualTTL time.Duration
 		var newUsableTTL time.Duration
 
-		val, err = remoteCache.GetOrProvide(
+		var ok bool
+		val, ok = remoteCache.GetOrProvide(
 			ctx,
 			key,
 			func(ctx context.Context, key K) (val V, actualTTL time.Duration, usableTTL time.Duration, err error) {
@@ -131,6 +132,9 @@ func remoteCacheProvider[K comparable, V any](remoteCache sweet.Cacher[K, V], us
 				return val, newActualTTL, newActualTTL, err
 			},
 		)
+		if !ok {
+			err = fmt.Errorf("get value from remote cache")
+		}
 		return val, newActualTTL, newUsableTTL, err
 	}
 }
@@ -147,7 +151,7 @@ func createLocalCache() *adaptersOtter.Otter {
 	if err != nil {
 		panic(err)
 	}
-	localCache := sweetOtter.NewOtter(otterCache, time.Hour)
+	localCache := adaptersOtter.NewOtter(otterCache, time.Hour)
 	return localCache
 }
 

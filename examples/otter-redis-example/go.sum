@@ -6,10 +6,13 @@ github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj
 github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/derbylock/go-sweet-cache/adapters/goredis/v2 v2.0.3/go.mod h1:9+oYR/HxG2O+lpcHOEM7q6pViHr8z9VgxQaMbAwModk=
 github.com/derbylock/go-sweet-cache/adapters/otter/v2 v2.0.1 h1:8gxznhPoqAHcmHx4rR+zonCaebdDEwWWl4FNvnc3UXY=
 github.com/derbylock/go-sweet-cache/adapters/otter/v2 v2.0.1/go.mod h1:zf0vn9Pu4tkMDTAopmCjrFcTpFVWIXc8c/BQ6TAaZT4=
+github.com/derbylock/go-sweet-cache/adapters/otter/v2 v2.0.3/go.mod h1:zf0vn9Pu4tkMDTAopmCjrFcTpFVWIXc8c/BQ6TAaZT4=
 github.com/derbylock/go-sweet-cache/lib/v2 v2.0.1 h1:nofSxf55u1BrUe4heAeBVjmFLtM1kjvWfssOpQyynoc=
 github.com/derbylock/go-sweet-cache/lib/v2 v2.0.1/go.mod h1:34nhia/cS17uS+btRD8L/inqU831I7DMsh8yD4xXG1I=
+github.com/derbylock/go-sweet-cache/lib/v2 v2.0.3/go.mod h1:34nhia/cS17uS+btRD8L/inqU831I7DMsh8yD4xXG1I=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/dolthub/maphash v0.1.0 h1:bsQ7JsF4FkkWyrP3oCnFJgrCUAFbFf3kOl4L/QxPDyQ=
