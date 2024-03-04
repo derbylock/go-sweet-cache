@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -33,8 +34,13 @@ var cntExec = atomic.Int32{}
 
 func main() {
 	ctx := context.Background()
+
+	redisHost, ok := os.LookupEnv("REDIS_HOST")
+	if !ok {
+		redisHost = "localhost:6379"
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "odin-redis.sbmt:6379",
+		Addr:     redisHost,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
