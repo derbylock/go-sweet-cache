@@ -129,7 +129,7 @@ func remoteCacheProvider[K comparable, V any](remoteCache sweet.Cacher[K, V], us
 			func(ctx context.Context, key K) (val V, actualTTL time.Duration, usableTTL time.Duration, err error) {
 				val, newActualTTL, newUsableTTL, err = userProvider(ctx, key)
 				// for remote cache usable ttl = actual ttl to avoid cache actuality prolongation
-				return val, newActualTTL, newActualTTL, err
+				return val, newUsableTTL, newUsableTTL, err
 			},
 		)
 		if !ok {

@@ -3,6 +3,7 @@ package goredis
 import (
 	"context"
 	"encoding"
+	"errors"
 	"fmt"
 	"time"
 
@@ -19,14 +20,19 @@ type Redis[K comparable, V any] struct {
 }
 
 type RedisClientErrorsMonitoring interface {
+	GetFailed(ctx context.Context, key string, err error)
 	SetFailed(ctx context.Context, key string, err error)
 	RemoveFailed(ctx context.Context, key string, err error)
 }
 
 func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V]) (V, bool) {
-	v := *new(V)
-	err := r.cli.Get(ctx, r.keyString(key)).Scan(v)
+	var v V
+	keyString := r.keyString(key)
+	err := r.cli.Get(ctx, keyString).Scan(&v)
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			r.monitoring.GetFailed(ctx, keyString, err)
+		}
 		var actualTTL time.Duration
 		v, actualTTL, _, err = valueProvider(ctx, key)
 		if err == nil {
@@ -40,9 +46,13 @@ func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider swe
 }
 
 func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V], defaultValue V) (V, bool) {
-	v := *new(V)
-	err := r.cli.Get(ctx, r.keyString(key)).Scan(v)
+	var v V
+	keyString := r.keyString(key)
+	err := r.cli.Get(ctx, keyString).Scan(&v)
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			r.monitoring.GetFailed(ctx, keyString, err)
+		}
 		go func() {
 			var actualTTL time.Duration
 			v, actualTTL, _, err = valueProvider(ctx, key)
