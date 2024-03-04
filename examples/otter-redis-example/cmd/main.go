@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"sync/atomic"
@@ -70,10 +69,10 @@ func main() {
 		val User,
 		err error,
 	) {
-		i := cntExec.Add(1)
-		if i == 2 {
-			return User{}, errors.New("cached error")
-		}
+		cntExec.Add(1)
+		//if i == 2 {
+		//	return User{}, errors.New("cached error")
+		//}
 
 		return User{
 			Name: key,
