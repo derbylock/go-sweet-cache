@@ -72,7 +72,7 @@ func main() {
 	) {
 		i := cntExec.Add(1)
 		if i == 2 {
-			return nil, errors.New("cached error")
+			return User{}, errors.New("cached error")
 		}
 
 		return User{
@@ -88,40 +88,43 @@ func main() {
 		userProvider,
 	)
 
-	v1, err := cache.GetOrProvide(ctx, "key1", cachedUserProvider)
+	const key1 = "keyX1"
+	const key2 = "keyX2"
+
+	v1, err := cache.GetOrProvide(ctx, key1, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key23", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key2, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key1", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key1, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key23", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key2, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second * 10)
 	fmt.Println("After 10 sec")
-	v1, err = cache.GetOrProvide(ctx, "key1", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key1, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key23", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key2, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second)
 	fmt.Println("After 1 sec")
-	v1, err = cache.GetOrProvide(ctx, "key1", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key1, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key23", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key2, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
 	time.Sleep(time.Second * 30)
 	fmt.Println("After 30 seconds")
-	v1, err = cache.GetOrProvide(ctx, "key1", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key1, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 
-	v1, err = cache.GetOrProvide(ctx, "key23", cachedUserProvider)
+	v1, err = cache.GetOrProvide(ctx, key2, cachedUserProvider)
 	fmt.Printf("%v || %w || %d\n", v1, err, cntExec.Load())
 }
 
@@ -142,7 +145,7 @@ func remoteCacheProvider[K comparable, V any](remoteCache sweet.Cacher[K, V], us
 			func(ctx context.Context, key K) (val V, actualTTL time.Duration, usableTTL time.Duration, err error) {
 				val, newActualTTL, newUsableTTL, err = userProvider(ctx, key)
 				// for remote cache usable ttl = actual ttl to avoid cache actuality prolongation
-				return val, newUsableTTL, newUsableTTL, err
+				return val, newActualTTL, newActualTTL, err
 			},
 		)
 		if !ok {

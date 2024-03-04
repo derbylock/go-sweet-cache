@@ -41,7 +41,7 @@ func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider swe
 			}
 		}
 	}
-	return v, true
+	return v, err == nil
 }
 
 func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V], defaultValue V) (V, bool) {
