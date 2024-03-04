@@ -1,4 +1,4 @@
-module github.com/derbylock/go-sweet-cache/lib/v2
+module github.com/derbylock/go-sweet-cache/lib
 
 go 1.21.7
 

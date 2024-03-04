@@ -10,6 +10,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/derbylock/go-sweet-cache/lib/v2 v2.0.0-20240304113608-9b226eaac191 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dolthub/swiss v0.2.1 // indirect
