@@ -2,38 +2,37 @@ package sweet
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
-type SimpleValueProvider[K comparable, V any] func(ctx context.Context, key K) (V, error)
+type SimpleValueProvider[V any] func(ctx context.Context, key any) (V, error)
 
-func FixedTTLProvider[K comparable, V any](
+func FixedTTLProvider[V any](
 	defaultActualTTL time.Duration,
 	defaultUsableTTL time.Duration,
 	defaultActualNegativeTTL time.Duration,
 	defaultUsableNegativeTTL time.Duration,
-	simpleProvider SimpleValueProvider[K, V],
-) ValueProvider[K, V] {
-	return func(ctx context.Context, key K) (
+	simpleProvider SimpleValueProvider[V],
+) ValueProvider[V] {
+	return func(ctx context.Context, key any) (
+		ok bool,
 		val V,
 		actualTTL time.Duration,
 		usableTTL time.Duration,
-		err error,
 	) {
 		v, e := simpleProvider(ctx, key)
 		if e != nil {
-			return v, defaultActualNegativeTTL, defaultUsableNegativeTTL, e
+			return false, v, defaultActualNegativeTTL, defaultUsableNegativeTTL
 		}
-		return v, defaultActualTTL, defaultUsableTTL, e
+		return true, v, defaultActualTTL, defaultUsableTTL
 	}
 }
 
-func SimpleFixedTTLProvider[K comparable, V any](
+func SimpleFixedTTLProvider[V any](
 	defaultUsableTTL time.Duration,
 	defaultUsableNegativeTTL time.Duration,
-	f func(ctx context.Context, key K) (V, error),
-) ValueProvider[K, V] {
+	f func(ctx context.Context, key any) (V, error),
+) ValueProvider[V] {
 	return FixedTTLProvider(
 		defaultUsableTTL/2,
 		defaultUsableTTL,
@@ -43,31 +42,27 @@ func SimpleFixedTTLProvider[K comparable, V any](
 	)
 }
 
-func (p *ValueProvider[K, V]) WithRemoteCache(
-	remoteCache Cacher[K, V],
-	baseProvider ValueProvider[K, V],
-) ValueProvider[K, V] {
-	return func(ctx context.Context, key K) (
+func (p *ValueProvider[V]) WithRemoteCache(
+	remoteCache Cacher[V],
+	baseProvider ValueProvider[V],
+) ValueProvider[V] {
+	return func(ctx context.Context, key any) (
+		ok bool,
 		val V,
 		actualTTL time.Duration,
 		usableTTL time.Duration,
-		err error,
 	) {
 		var newActualTTL time.Duration
 		var newUsableTTL time.Duration
 
-		var ok bool
 		val, ok = remoteCache.GetOrProvide(
 			ctx,
 			key,
-			func(ctx context.Context, key K) (val V, actualTTL time.Duration, usableTTL time.Duration, err error) {
-				val, newActualTTL, newUsableTTL, err = baseProvider(ctx, key)
-				return val, newActualTTL, newUsableTTL, err
+			func(ctx context.Context, key any) (ok bool, val V, actualTTL time.Duration, usableTTL time.Duration) {
+				ok, val, newActualTTL, newUsableTTL = baseProvider(ctx, key)
+				return ok, val, newActualTTL, newUsableTTL
 			},
 		)
-		if !ok {
-			err = fmt.Errorf("fail get value from remote cache")
-		}
-		return val, newActualTTL, newUsableTTL, err
+		return ok, val, newActualTTL, newUsableTTL
 	}
 }

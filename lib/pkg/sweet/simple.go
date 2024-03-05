@@ -7,7 +7,7 @@ import (
 	"resenje.org/singleflight"
 )
 
-var _ Cacher[string, any] = &Cache[string, any]{}
+var _ Cacher[any] = &Cache[any]{}
 
 // SimpleCache is an interface for a simple cache that can store key-value pairs.
 type SimpleCache interface {
@@ -30,85 +30,82 @@ type SimpleCache interface {
 	SetWithTTL(key any, value any, ttl time.Duration) bool
 }
 
-type CacheItem[K comparable, V any] struct {
+type CacheItem[V any] struct {
 	value  V
 	ok     bool
 	actual time.Time
-	usable time.Time
 }
 
-type Cache[K comparable, V any] struct {
+type Cache[V any] struct {
 	back SimpleCache
-	sfg  *singleflight.Group[K, V]
+	sfg  *singleflight.Group[any, CacheItem[V]]
 	now  func() time.Time
 }
 
-func NewCache[K comparable, V any](back SimpleCache, now func() time.Time) *Cache[K, V] {
-	return &Cache[K, V]{
+func NewCache[V any](back SimpleCache, now func() time.Time) *Cache[V] {
+	return &Cache[V]{
 		back: back,
-		sfg:  &singleflight.Group[K, V]{},
+		sfg:  &singleflight.Group[any, CacheItem[V]]{},
 		now:  now,
 	}
 }
 
-func (c Cache[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider ValueProvider[K, V]) (V, bool) {
+func (c Cache[V]) GetOrProvide(ctx context.Context, key any, valueProvider ValueProvider[V]) (V, bool) {
 	now := c.now()
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(CacheItem[K, V]); ok {
+		if item, ok := cachedVal.(CacheItem[V]); ok {
 			if now.Before(item.actual) {
 				return item.value, item.ok
 			}
-			if now.Before(item.usable) {
-				go func() {
-					c.updateValueFromProvider(ctx, key, valueProvider)
-				}()
-				return item.value, item.ok
-			}
+			// it is not actual but usable
+			go func() {
+				c.updateValueFromProvider(ctx, key, valueProvider)
+			}()
+			return item.value, item.ok
 		}
 	}
 
-	v, _, err := c.updateValueFromProvider(ctx, key, valueProvider)
-	return v, err == nil
+	v, ok := c.updateValueFromProvider(ctx, key, valueProvider)
+	return v, ok
 }
 
-func (c Cache[K, V]) updateValueFromProvider(
+func (c Cache[V]) updateValueFromProvider(
 	ctx context.Context,
-	key K,
-	valueProvider ValueProvider[K, V],
-) (V, bool, error) {
-	return c.sfg.Do(ctx, key, func(ctx context.Context) (V, error) {
-		v, actualTll, usableTtl, err := valueProvider(ctx, key)
+	key any,
+	valueProvider ValueProvider[V],
+) (V, bool) {
+	singleItem, _, _ := c.sfg.Do(ctx, key, func(ctx context.Context) (CacheItem[V], error) {
+		ok, v, actualTll, usableTtl := valueProvider(ctx, key)
 		// use new now after the value provided
 		now := c.now()
-		item := CacheItem[K, V]{
+		item := CacheItem[V]{
 			value:  v,
-			ok:     err == nil,
+			ok:     ok,
 			actual: now.Add(actualTll),
-			usable: now.Add(usableTtl),
 		}
 		c.back.SetWithTTL(key, item, usableTtl)
-		return v, err
+		return item, nil
 	})
+	return singleItem.value, singleItem.ok
 }
 
-func (c Cache[K, V]) GetOrProvideAsync(
+func (c Cache[V]) GetOrProvideAsync(
 	ctx context.Context,
-	key K,
-	valueProvider ValueProvider[K, V],
+	key any,
+	valueProvider ValueProvider[V],
 	defaultValue V,
 ) (V, bool) {
 	now := c.now()
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(CacheItem[K, V]); ok {
+		if item, ok := cachedVal.(CacheItem[V]); ok {
 			if now.Before(item.actual) {
 				return item.value, item.ok
 			}
-			if now.Before(item.usable) {
-				go func() {
-					c.updateValueFromProvider(ctx, key, valueProvider)
-				}()
-				return item.value, item.ok
-			}
+			// it is not actual but usable
+			go func() {
+				c.updateValueFromProvider(ctx, key, valueProvider)
+			}()
+			return item.value, item.ok
 		}
 	}
 
@@ -118,22 +115,19 @@ func (c Cache[K, V]) GetOrProvideAsync(
 	return defaultValue, false
 }
 
-func (c Cache[K, V]) Get(ctx context.Context, key K) (V, bool) {
-	now := c.now()
+func (c Cache[V]) Get(ctx context.Context, key any) (V, bool) {
 	if cachedVal, ok := c.back.Get(key); ok {
-		if item, ok := cachedVal.(CacheItem[K, V]); ok {
-			if now.Before(item.usable) {
-				return item.value, item.ok
-			}
+		if item, ok := cachedVal.(CacheItem[V]); ok {
+			return item.value, item.ok
 		}
 	}
 	return *new(V), false
 }
 
-func (c Cache[K, V]) Remove(ctx context.Context, key K) {
+func (c Cache[V]) Remove(ctx context.Context, key any) {
 	c.back.Remove(key)
 }
 
-func (c Cache[K, V]) Clear(ctx context.Context) {
+func (c Cache[V]) Clear(ctx context.Context) {
 	c.back.Clear()
 }

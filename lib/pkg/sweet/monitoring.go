@@ -2,40 +2,40 @@ package sweet
 
 import "context"
 
-type CacheMonitoring[K comparable] interface {
-	Miss(ctx context.Context, key K)
-	Hit(ctx context.Context, key K)
-	GetFailed(ctx context.Context, key K, err error)
-	PutFailed(ctx context.Context, key K, err error)
-	RemoveFailed(ctx context.Context, key K)
+type CacheMonitoring interface {
+	Miss(ctx context.Context, key any)
+	Hit(ctx context.Context, key any)
+	GetFailed(ctx context.Context, key any, err error)
+	PutFailed(ctx context.Context, key any, err error)
+	RemoveFailed(ctx context.Context, key any)
 	ClearFailed(ctx context.Context)
 }
 
-var _ CacheMonitoring[string] = NopCacheMonitoring[string]{}
+var _ CacheMonitoring = NopCacheMonitoring{}
 
-type NopCacheMonitoring[K comparable] struct {
+type NopCacheMonitoring struct {
 }
 
-func (n NopCacheMonitoring[K]) Miss(ctx context.Context, key K) {
+func (n NopCacheMonitoring) Miss(ctx context.Context, key any) {
 	// do nothing
 }
 
-func (n NopCacheMonitoring[K]) Hit(ctx context.Context, key K) {
+func (n NopCacheMonitoring) Hit(ctx context.Context, key any) {
 	// do nothing
 }
 
-func (n NopCacheMonitoring[K]) GetFailed(ctx context.Context, key K, err error) {
+func (n NopCacheMonitoring) GetFailed(ctx context.Context, key any, err error) {
 	// do nothing
 }
 
-func (n NopCacheMonitoring[K]) PutFailed(ctx context.Context, key K, err error) {
+func (n NopCacheMonitoring) PutFailed(ctx context.Context, key any, err error) {
 	// do nothing
 }
 
-func (n NopCacheMonitoring[K]) RemoveFailed(ctx context.Context, key K) {
+func (n NopCacheMonitoring) RemoveFailed(ctx context.Context, key any) {
 	// do nothing
 }
 
-func (n NopCacheMonitoring[K]) ClearFailed(ctx context.Context) {
+func (n NopCacheMonitoring) ClearFailed(ctx context.Context) {
 	// do nothing
 }
