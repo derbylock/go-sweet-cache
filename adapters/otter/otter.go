@@ -3,11 +3,11 @@ package otter
 import (
 	"time"
 
-	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"github.com/maypok86/otter"
 )
 
-var _ simple.SimpleCache = &Otter{}
+var _ sweet.SimpleCache = &Otter{}
 
 type Otter struct {
 	back       otter.CacheWithVariableTTL[any, any]

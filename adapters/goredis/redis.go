@@ -11,9 +11,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var _ sweet.Cacher[string, any] = &Redis[string, any]{}
+var _ sweet.Cacher[any] = &Redis[any]{}
 
-type Redis[K comparable, V any] struct {
+type Redis[V any] struct {
 	cli        *redis.Client
 	keyPrefix  string
 	monitoring RedisClientErrorsMonitoring
@@ -25,8 +25,9 @@ type RedisClientErrorsMonitoring interface {
 	RemoveFailed(ctx context.Context, key string, err error)
 }
 
-func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V]) (V, bool) {
+func (r *Redis[V]) GetOrProvide(ctx context.Context, key any, valueProvider sweet.ValueProvider[V]) (V, bool) {
 	var v V
+	var ok bool
 	keyString := r.keyString(key)
 	err := r.cli.Get(ctx, keyString).Scan(&v)
 	if err != nil {
@@ -34,18 +35,18 @@ func (r *Redis[K, V]) GetOrProvide(ctx context.Context, key K, valueProvider swe
 			r.monitoring.GetFailed(ctx, keyString, err)
 		}
 		var actualTTL time.Duration
-		v, actualTTL, _, err = valueProvider(ctx, key)
-		if err == nil {
+		ok, v, actualTTL, _ = valueProvider(ctx, key)
+		if ok {
 			err := r.cli.Set(ctx, r.keyString(key), &v, actualTTL).Err()
 			if err != nil {
 				r.monitoring.SetFailed(ctx, r.keyString(key), err)
 			}
 		}
 	}
-	return v, err == nil
+	return v, err == nil || ok
 }
 
-func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvider sweet.ValueProvider[K, V], defaultValue V) (V, bool) {
+func (r *Redis[V]) GetOrProvideAsync(ctx context.Context, key any, valueProvider sweet.ValueProvider[V], defaultValue V) (V, bool) {
 	var v V
 	keyString := r.keyString(key)
 	err := r.cli.Get(ctx, keyString).Scan(&v)
@@ -55,8 +56,9 @@ func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvide
 		}
 		go func() {
 			var actualTTL time.Duration
-			v, actualTTL, _, err = valueProvider(ctx, key)
-			if err == nil {
+			var ok bool
+			ok, v, actualTTL, _ = valueProvider(ctx, key)
+			if ok {
 				err = r.cli.Set(ctx, r.keyString(key), &v, actualTTL).Err()
 				if err != nil {
 					r.monitoring.SetFailed(ctx, r.keyString(key), err)
@@ -68,12 +70,12 @@ func (r *Redis[K, V]) GetOrProvideAsync(ctx context.Context, key K, valueProvide
 	return v, true
 }
 
-func (r *Redis[K, V]) Get(ctx context.Context, key K) (V, bool) {
+func (r *Redis[V]) Get(ctx context.Context, key any) (V, bool) {
 	// always return cache miss because we can't return value without remote calls
 	return *new(V), false
 }
 
-func (r *Redis[K, V]) Remove(ctx context.Context, key K) {
+func (r *Redis[V]) Remove(ctx context.Context, key any) {
 	keyString := r.keyString(key)
 	err := r.cli.Del(ctx, keyString).Err()
 	if err != nil {
@@ -81,15 +83,15 @@ func (r *Redis[K, V]) Remove(ctx context.Context, key K) {
 	}
 }
 
-func NewRedis[K comparable, V any](cli *redis.Client, keyPrefix string, monitoring RedisClientErrorsMonitoring) *Redis[K, V] {
-	return &Redis[K, V]{cli: cli, keyPrefix: keyPrefix, monitoring: monitoring}
+func NewRedis[V any](cli *redis.Client, keyPrefix string, monitoring RedisClientErrorsMonitoring) *Redis[V] {
+	return &Redis[V]{cli: cli, keyPrefix: keyPrefix, monitoring: monitoring}
 }
 
-func (r *Redis[K, V]) Clear(ctx context.Context) {
+func (r *Redis[V]) Clear(ctx context.Context) {
 	// doing nothing, distributed cache can't be fully cleared
 }
 
-func (r *Redis[K, V]) keyString(key any) string {
+func (r *Redis[V]) keyString(key any) string {
 	k, err := r.encode(key)
 	if err != nil {
 		return fmt.Sprintf("%s%v", r.keyPrefix, k)
@@ -97,7 +99,7 @@ func (r *Redis[K, V]) keyString(key any) string {
 	return r.keyPrefix + k
 }
 
-func (r *Redis[K, V]) encode(value any) (string, error) {
+func (r *Redis[V]) encode(value any) (string, error) {
 	switch s := value.(type) {
 	case string:
 		return s, nil

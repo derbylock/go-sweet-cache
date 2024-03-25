@@ -6,5 +6,7 @@ Go cache library which works on top of a simple caching interface and provides o
 - 2-level eviction (actual and usable ttl)
 - multileveling (local cache->remote cache)
 - monitoring
+- refreshable cache
+- key-based cache
 
 Actually anything you need for real simple caching in your app.
