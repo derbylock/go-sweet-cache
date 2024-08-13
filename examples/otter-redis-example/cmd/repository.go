@@ -21,6 +21,21 @@ func (u *GetUserParams) MarshalBinary() (data []byte, err error) {
 	return json.Marshal(u)
 }
 
+type UnknownKeyTypeError struct {
+	key any
+	msg string
+}
+
+func (e UnknownKeyTypeError) Key() any {
+	return e.key
+}
+
+func (e UnknownKeyTypeError) Error() string {
+	return e.msg
+}
+
+// GetUser returns user by params
+// @cached(name:"users", key: "params.MarshalBinary()")
 func (r *UserRepository) GetUser(ctx context.Context, params GetUserParams) (
 	user User,
 	err error,

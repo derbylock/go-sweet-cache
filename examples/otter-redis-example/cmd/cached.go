@@ -10,10 +10,10 @@ import (
 
 type CachedUserRepository struct {
 	repository *UserRepository
-	getCache   sweet.Cacher[GetUserParams, User]
+	getCache   sweet.Cacher[User]
 }
 
-func NewCachedUserRepository(repository *UserRepository, getCache sweet.Cacher[GetUserParams, User]) *CachedUserRepository {
+func NewCachedUserRepository(repository *UserRepository, getCache sweet.Cacher[User]) *CachedUserRepository {
 	return &CachedUserRepository{repository: repository, getCache: getCache}
 }
 
@@ -21,10 +21,13 @@ func (r *CachedUserRepository) GetUser(ctx context.Context, params GetUserParams
 	user User,
 	err error,
 ) {
-	u, ok := r.getCache.GetOrProvide(ctx, params, sweet.SimpleFixedTTLProvider(
+	u, ok := r.getCache.GetOrProvide(ctx, params, sweet.SimpleFixedTTLProvider[User](
 		time.Second*20,
 		time.Second*5,
-		r.repository.GetUser,
+		func(ctx context.Context, key any) (User, error) {
+			u, err := r.repository.GetUser(ctx, params)
+			return u, err
+		},
 	))
 	if !ok {
 		return User{}, fmt.Errorf("can't retrieve user")

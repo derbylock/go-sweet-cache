@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/sweet"
 	"os"
 	"sync/atomic"
 	"time"
 
 	adaptersRedis "github.com/derbylock/go-sweet-cache/adapters/goredis/v2"
 	adaptersOtter "github.com/derbylock/go-sweet-cache/adapters/otter/v2"
-	"github.com/derbylock/go-sweet-cache/lib/v2/pkg/simple"
 	"github.com/maypok86/otter"
 	"github.com/redis/go-redis/v9"
 )
@@ -64,9 +64,9 @@ func initServices() (context.Context, *CachedUserRepository) {
 	rdb := redisClient()
 	userRepository := NewUserRepository()
 
-	localCache := simple.NewCache[GetUserParams, User](otterSimpleCache(), time.Now)
-	redisCache := adaptersRedis.NewRedis[GetUserParams, User](rdb, "@getUsers::", &LogMonitoring{})
-	cache := simple.NewTwoLevelCache[GetUserParams, User](localCache, redisCache)
+	localCache := sweet.NewCache[User](otterSimpleCache(), time.Now)
+	redisCache := adaptersRedis.NewRedis[User](rdb, "@getUsers::", &LogMonitoring{})
+	cache := sweet.NewTwoLevelCache[User](localCache, redisCache)
 
 	cachedRepository := NewCachedUserRepository(userRepository, cache)
 	return ctx, cachedRepository
